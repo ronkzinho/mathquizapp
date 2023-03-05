@@ -1,0 +1,176 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+
+:root {
+  --question-color: rgba(255, 255, 255, 0.02);
+}
+
+body,
+html {
+  height: 100%;
+}
+
+body {
+  background-image: url('../../4k.jpg');
+  background-size: contain;
+  background-blend-mode: darken;
+  color: white;
+  font-family: 'Roboto';
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+}
+
+.header > .prefix {
+  color: rgba(255, 255, 255, 0.842);
+}
+
+.prefix {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+a {
+  color: white;
+  text-decoration: none;
+}
+
+.questionSlider {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  height: 50%;
+}
+
+.seedButton {
+  color: #00aa00;
+  cursor: pointer;
+  font-family: 'Roboto';
+  background: none;
+  font-size: inherit;
+  border: none;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 2%;
+  width: 100%;
+  flex-flow: wrap;
+}
+
+.question::after {
+  opacity: 1;
+}
+
+.question {
+  background-color: var(--question-color);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  width: 50%;
+  height: 100%;
+}
+
+.question:hover::before {
+  opacity: 1;
+}
+
+.question::before,
+.question::after {
+  border-radius: inherit;
+  content: '';
+  height: 100%;
+  left: 0px;
+  opacity: 0;
+  position: absolute;
+  top: 0px;
+  transition: opacity 500ms;
+  width: 100%;
+}
+
+.question::before {
+  background: radial-gradient(
+    800px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.06),
+    transparent 40%
+  );
+  z-index: 3;
+}
+
+.question::after {
+  background: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.4),
+    transparent 40%
+  );
+  z-index: 1;
+}
+
+.question > .question-content {
+  background-color: var(--question-color);
+  border-radius: inherit;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  inset: 1px;
+  padding: 10px;
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.sliderButton {
+  background: none;
+  font-size: 128px;
+  color: white;
+  cursor: pointer;
+  font-family: 'Roboto';
+  border: none;
+  -moz-user-select: -moz-none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sliderButton:disabled {
+  color: rgb(31, 31, 31);
+  cursor: not-allowed;
+  border: none;
+}
+
+/* .sliderButton::before {
+  /* color: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.4),
+    transparent 40%
+  ); */
+/* rotate: calc(180deg + var(--mouse-x)); */
+/* } */
+
+/* .sliderButton::after { */
+/* color: radial-gradient(
+    600px circle at var(--mouse-x) var(--mouse-y),
+    rgba(255, 255, 255, 0.4),
+    transparent 40%
+  ); */
+/* color: rgb(0, 0, calc(--mouse-x)); */
+/* rotate: calc(180deg + var(--mouse-x)); */
+/* } */
+
+p {
+  text-align: center;
+}
