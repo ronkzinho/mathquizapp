@@ -710,7 +710,7 @@ onEvent('settingsAnchorFromHome', 'click', function () {
 
 onEvent('moreStatistics', 'click', function () {
   open(
-    'http://localhost:5173/' +
+    'https://mathquizapp.vercel.app/' +
       seed +
       '?time=' +
       finalTime +
