@@ -4,6 +4,12 @@
   import '@/global.css';
 </script>
 
+<a
+  href={PROJECT_URL}
+  style="font-size: 64px; margin: 24px; cursor: pointer; color: cornsilk"
+  target="_blank"
+  rel="noreferrer">Ir para o site do projeto</a
+>
 <iframe
   title="Applab"
   width="392"

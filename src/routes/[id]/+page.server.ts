@@ -1,5 +1,5 @@
 import { env } from '$env/dynamic/public';
-import type { Load } from '@sveltejs/kit';
+import { error, type Load } from '@sveltejs/kit';
 
 export const ssr = true;
 export const load: Load = async ({ params }) => {
@@ -8,8 +8,13 @@ export const load: Load = async ({ params }) => {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
-        id: params.id!
+        id: params.id!,
+        'max-age': '' + 60 * 60 * 24
       }
-    }).then((res) => res.json()))
+    })
+      .then((res) => res.json())
+      .catch((err) => {
+        throw error(500, 'Invalid id!');
+      }))
   };
 };

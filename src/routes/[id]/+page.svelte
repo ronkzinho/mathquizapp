@@ -1,14 +1,14 @@
 <script async lang="ts" setup>
   import { page } from '$app/stores';
   import { formatDistanceStrict } from 'date-fns';
-  /// <reference types="../../../types/fnsLocale.d.ts" />
+  /// <reference types="../../types/fnsLocale.d.ts" />
   import { ptBR as pt } from 'date-fns/locale/index.js';
   import Question from '@/components/Question.svelte';
   import { createQuesions } from '@/util/applab';
   import '@/global.css';
 
-  let { seed } = $page.params;
-  let { time, quizStarted, eachQuestionTime } = $page.data as {
+  let { seed, time, quizStarted, eachQuestionTime } = $page.data as {
+    seed: string;
     time: number;
     quizStarted: string;
     eachQuestionTime: string[];
