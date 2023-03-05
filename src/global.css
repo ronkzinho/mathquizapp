@@ -10,7 +10,7 @@ html {
 }
 
 body {
-  background-image: url('../../4k.jpg');
+  background-image: url('4k.jpg');
   background-size: contain;
   background-blend-mode: darken;
   color: white;
