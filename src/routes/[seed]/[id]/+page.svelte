@@ -1,7 +1,7 @@
 <script lang="ts" setup>
   import { page } from '$app/stores';
   import { formatDistanceStrict } from 'date-fns';
-  import pt from 'date-fns/locale/pt-BR/index';
+  import pt from 'date-fns/locale/pt-BR';
   import Question from '@/components/Question.svelte';
   import { createQuesions } from '@/util/applab';
   import '@/global.css';
