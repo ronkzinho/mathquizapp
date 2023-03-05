@@ -6,7 +6,7 @@
 
 <a
   href={PROJECT_URL}
-  style="font-size: 3.5vw; margin: 2%; cursor: pointer; color: cornsilk"
+  style="font-size: 5vh; margin: 1vh; cursor: pointer; color: cornsilk"
   target="_blank"
   rel="noreferrer">Ir para o site do projeto</a
 >
