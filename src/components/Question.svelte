@@ -1,6 +1,7 @@
 <script lang="ts">
   import { formatDistanceStrict } from 'date-fns';
-  import { ptBR as pt } from 'date-fns/locale';
+  /// <reference types="../types/fnsLocale.d.ts" />
+  import { ptBR as pt } from 'date-fns/locale/index.js';
 
   export let question: string;
   export let answer: string | number;

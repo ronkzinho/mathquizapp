@@ -1,7 +1,5 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
-import path from 'path';
-import { fileURLToPath, URL } from 'node:url';
 import { ViteAliases } from 'vite-aliases';
 
 export default defineConfig({
@@ -30,9 +28,7 @@ export default defineConfig({
 
       useConfig: false,
 
-      useTypescript: true,
-
-      root: process.cwd()
+      useTypescript: true
     })
   ]
 });
