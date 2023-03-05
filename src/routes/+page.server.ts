@@ -34,6 +34,6 @@ export const load: Load = async ({ url }) => {
       })
     }).then((res) => res.json());
 
-    throw redirect(300, url.href.split('?')[0] + '/' + id);
+    throw redirect(302, url.href.split('?')[0] + '/' + id);
   }
 };
