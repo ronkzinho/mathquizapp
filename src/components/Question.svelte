@@ -37,7 +37,7 @@
       >
     </h2>
     <p class="prefix">
-      Tempo demorado para responder a questão: <span style="color: white">
+      Tempo demorado para responder a questão: <span class="questionTime">
         {parseInt(questionTime) - parseInt(lastQuestionTime) >= 1000
           ? formatDistanceStrict(
               parseInt(questionTime),

@@ -5,7 +5,6 @@
   import { ptBR as pt } from 'date-fns/locale/index.js';
   import Question from '@/components/Question.svelte';
   import { createQuesions } from '@/util/applab';
-  import '@/global.css';
 
   let { seed, time, quizStarted, eachQuestionTime } = $page.data as {
     seed: string;
@@ -46,6 +45,9 @@
   };
 </script>
 
+<svelte:head>
+  <title>Seed: {seed}</title>
+</svelte:head>
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="header">
@@ -92,3 +94,5 @@
     }}>&gt</button
   >
 </div>
+
+<p class="madeBy">Feito por Henrique</p>
