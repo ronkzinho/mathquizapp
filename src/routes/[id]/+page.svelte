@@ -1,17 +1,26 @@
-<script async lang="ts" setup>
-  import { page } from '$app/stores';
-  import { formatDistanceStrict } from 'date-fns';
-  /// <reference types="../../types/fnsLocale.d.ts" />
-  import { ptBR as pt } from 'date-fns/locale/index.js';
+<script lang="ts">
   import Question from '@/components/Question.svelte';
-  import { createQuesions } from '@/util/applab';
+  import { createQuesions } from '@/util/applab.js';
+  import {
+    format,
+    formatDistanceStrict,
+    formatDistanceToNow,
+    isAfter,
+    setDefaultOptions,
+    subDays
+  } from 'date-fns';
+  import { ptBR as pt } from 'date-fns/locale';
 
-  let { seed, time, quizStarted, eachQuestionTime } = $page.data as {
+  setDefaultOptions({ locale: pt });
+
+  export let data: {
     seed: string;
     time: number;
     quizStarted: string;
     eachQuestionTime: string[];
   };
+
+  let { seed, time, quizStarted, eachQuestionTime } = data;
 
   const { alternatives, answers, questions, seeds } = createQuesions(seed);
 
@@ -59,7 +68,7 @@
   </h1>
   <h1 class="prefix">
     Tempo:
-    <span style="color: blue"
+    <span style="color: cornflowerblue"
       >{formatDistanceStrict(
         new Date(time + parseInt(quizStarted)),
         new Date(parseInt(quizStarted)),
@@ -94,5 +103,25 @@
     }}>&gt</button
   >
 </div>
+
+<span
+  class="date-display"
+  title={isAfter(new Date(time + parseInt(quizStarted)), subDays(new Date(), 7))
+    ? ''
+    : formatDistanceToNow(new Date(time + parseInt(quizStarted)), {
+        addSuffix: true
+      }).replace(/^./, (c) => c.toUpperCase())}
+>
+  {(isAfter(new Date(time + parseInt(quizStarted)), subDays(new Date(), 7))
+    ? formatDistanceToNow(new Date(time + parseInt(quizStarted)), {
+        addSuffix: true
+      })
+    : format(
+        new Date(time + parseInt(quizStarted)),
+        "dd 'de' MMMM 'de' yyyy",
+        {}
+      )
+  ).replace(/^./, (c) => c.toUpperCase())}
+</span>
 
 <p class="madeBy">Feito por Henrique</p>

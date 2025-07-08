@@ -1,7 +1,6 @@
 <script lang="ts">
   import { formatDistanceStrict } from 'date-fns';
   /// <reference types="../types/fnsLocale.d.ts" />
-  import { ptBR as pt } from 'date-fns/locale/index.js';
 
   export let question: string;
   export let answer: string | number;
@@ -24,7 +23,12 @@
   };
 </script>
 
-<div class="question" on:mousemove={handleMove}>
+<div
+  class="question"
+  on:mousemove={handleMove}
+  role="region"
+  aria-label="Question details"
+>
   <div class="question-content">
     <h1 class="prefix">
       Questão: <span style="color: white; font-family: sans-serif"
@@ -41,12 +45,11 @@
         {parseInt(questionTime) - parseInt(lastQuestionTime) >= 1000
           ? formatDistanceStrict(
               parseInt(questionTime),
-              parseInt(lastQuestionTime),
-              {
-                locale: pt
-              }
+              parseInt(lastQuestionTime)
             )
-          : parseInt(questionTime) - parseInt(lastQuestionTime) + 'ms'}
+              .replace('segundos', 's')
+              .replace('segundo', 's')
+          : parseInt(questionTime) - parseInt(lastQuestionTime) + ' ms'}
       </span>
     </p>
   </div>

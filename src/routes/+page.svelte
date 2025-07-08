@@ -17,7 +17,7 @@
     height="620"
     style="border: 0px;"
     src={PROJECT_URL + '/embed'}
-  />
+  ></iframe>
 </div>
 
 <p class="madeBy">Feito por Henrique</p>

@@ -26,9 +26,30 @@ export default defineConfig({
 
       useIndexes: false,
 
-      useConfig: false,
+      useConfig: false
+    }),
+    ViteAliases({
+      dir: 'lib',
 
-      useTypescript: true
+      prefix: '@lib',
+
+      deep: true,
+
+      depth: 1,
+
+      createLog: false,
+
+      logPath: 'lib/logs',
+
+      createGlobalAlias: true,
+
+      adjustDuplicates: false,
+
+      useAbsolute: false,
+
+      useIndexes: false,
+
+      useConfig: false
     })
   ]
 });
