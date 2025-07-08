@@ -1,7 +1,6 @@
-import Question from '@/components/Question.svelte';
 import redis from '@lib/redis';
 import { questionSchema } from '@lib/schema';
-import { redirect, type Load } from '@sveltejs/kit';
+import { error, redirect, type Load } from '@sveltejs/kit';
 
 export const ssr = true;
 
@@ -18,14 +17,17 @@ export const load: Load = async ({ url }) => {
     eachQuestionTime
   };
 
-  if (quizData instanceof Question) return;
+  if (!seed || !time || !quizStarted || !eachQuestionTime) return;
+
+  let id = 0;
 
   try {
     const details = questionSchema.parse(quizData);
+    id = (await redis.incr('stats')) || 0;
+    await redis.set(id.toString(), JSON.stringify(details));
+  } catch (err) {
+    error(400, 'Something went wrong!');
+  }
 
-    const id = ((await redis.incr('stats')) || 0).toString();
-    await redis.set(id, JSON.stringify(details));
-
-    throw redirect(302, url.href.split('?')[0] + id);
-  } catch (err) {}
+  throw redirect(301, url.href.split('?')[0] + id);
 };
