@@ -205,7 +205,11 @@ function createScientificNotationQuestion() {
         }
         currentAlternatives.push(alternative);
     }
-    answers.push(answer);
+    answers.push(
+        answer.toLocaleString('pt-BR', {
+            minimumFractionDigits: Math.max(-randomExponent, 0)
+        })
+    );
     alternatives.push({
         alternatives: currentAlternatives,
         rightAnswer: rightAnswer
@@ -217,9 +221,17 @@ function formatInterval(interval) {
         : interval.empty
           ? '∅'
           : (interval.openingClosed === 1 ? '[' : ']') +
-            (interval.start === -Infinity ? '-∞' : interval.start) +
+            (interval.start === -Infinity
+                ? '-∞'
+                : interval.start === Infinity
+                  ? '+∞'
+                  : interval.start) +
             ', ' +
-            (interval.end === Infinity ? '∞' : interval.end) +
+            (interval.end === Infinity
+                ? '∞'
+                : interval.end === -Infinity
+                  ? '-∞'
+                  : interval.end) +
             (interval.endingClosed === 1 ? ']' : '[');
 }
 function shuffle(array) {
@@ -427,9 +439,10 @@ function createIntervalQuestion() {
     var intervals = [createRandomInterval(), createRandomInterval()];
     var typeofQuestion = randomNumberSeeded(0, 1);
     var rightAnswer = randomNumberSeeded(0, 3);
-    var question = intervals
-        .map(formatInterval)
-        .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ');
+    var question =
+        intervals
+            .map(formatInterval)
+            .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ') + ' =';
     questions.push(question);
     var answer = {
         empty: false
