@@ -1,24 +1,30 @@
 import redis from '@lib/redis';
-import { questionSchema } from '@lib/schema/index';
+import { questionSchema } from '@lib/schema';
 import { error, type Load } from '@sveltejs/kit';
 import { ZodError } from 'zod/v4';
 
 export const ssr = true;
+
 export const load: Load = async ({ params }) => {
-  const id = params.id;
-  if (!id) {
-    error(400, '/');
-  }
+    const id = params.id;
 
-  const details = await redis.get(id);
+    if (!id) {
+        error(400, '/');
+    }
 
-  if (!details) {
-    error(404, 'Quiz not found!');
-  }
+    const detailsRaw = await redis.get(`quiz:${id}`);
 
-  try {
-    return questionSchema.parse(details);
-  } catch (err) {
-    error(400, err instanceof ZodError ? err.message : 'Invalid question id!');
-  }
+    if (!detailsRaw) {
+        error(404, 'Quiz not found!');
+    }
+
+    try {
+        return questionSchema.parse(detailsRaw);
+    } catch (err) {
+        console.log(err);
+        error(
+            400,
+            err instanceof ZodError ? err.message : 'Invalid quiz data!'
+        );
+    }
 };

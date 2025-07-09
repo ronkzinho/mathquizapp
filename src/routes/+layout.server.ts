@@ -1,48 +1,59 @@
 import redis from '@lib/redis';
 import { questionSchema, type Question } from '@lib/schema';
 import { error, redirect, type Load } from '@sveltejs/kit';
+import crypto from 'crypto';
 
 export const ssr = true;
 
 export const load: Load = async ({ url }) => {
-  const seed = url.searchParams.get('seed');
-  const time = parseInt(url.searchParams.get('time')!);
-  const quizStarted = url.searchParams.get('quizStarted');
-  const eachQuestionTime = decodeURIComponent(
-    url.searchParams.get('eachQuestionTime')!
-  ).split(',')!;
+    const seed = url.searchParams.get('seed');
+    const time = parseInt(url.searchParams.get('time') || '');
+    const quizStarted = url.searchParams.get('quizStarted');
+    const eachQuestionTime = decodeURIComponent(
+        url.searchParams.get('eachQuestionTime') || ''
+    ).split(',');
 
-  type NullableQuestion = {
-    [K in keyof Question]?: Question[K] | null;
-  };
+    type NullableQuestion = {
+        [K in keyof Question]?: Question[K] | null;
+    };
 
-  const quizData: NullableQuestion = {
-    seed,
-    time,
-    quizStarted,
-    eachQuestionTime
-  };
+    const quizData: NullableQuestion = {
+        seed,
+        time,
+        quizStarted,
+        eachQuestionTime
+    };
 
-  const setSeed = url.searchParams.get('setSeed');
+    const setSeed = url.searchParams.get('setSeed');
+    if (setSeed !== null) quizData.setSeed = setSeed === 'true';
 
-  if (setSeed !== null) {
-    quizData.setSeed = setSeed === 'true';
-  }
+    if (!seed || !time || !quizStarted || !eachQuestionTime) return;
 
-  if (!seed || !time || !quizStarted || !eachQuestionTime) return;
+    let id: string | null = null;
 
-  let id = 0;
+    try {
+        const details = questionSchema.parse(quizData);
 
-  try {
-    const details = questionSchema.parse(quizData);
+        // Create digest
+        const digest = crypto
+            .createHash('sha256')
+            .update(JSON.stringify(details))
+            .digest('hex');
 
-    const length = await redis.hlen('details');
-    id = length === 0 || !length ? 0 : length + 1;
-    console.log(await redis.hsetnx('details', id.toString(), details));
-  } catch (err) {
-    console.log(err);
-    error(400, 'Something went wrong!');
-  }
+        // Try to claim this digest
 
-  throw redirect(301, url.href.split('?')[0] + id);
+        id = await redis.get(`quiz:digest:${digest}`);
+
+        if (id) return;
+
+        // New quiz → assign new ID
+        const newId = (await redis.incr('stats')).toString();
+        await redis.set(`quiz:digest:${digest}`, newId);
+        await redis.set(`quiz:${newId}`, JSON.stringify(details));
+        id = newId;
+    } catch (err) {
+        error(400, 'Something went wrong!');
+    } finally {
+        redirect(301, url.href.split('?')[0] + id);
+    }
 };
