@@ -1,6 +1,7 @@
 let questions: string[] = [];
 let answers: (number | string)[] = [];
-let alternatives: { right: number; alternatives: (string | number)[] }[] = [];
+let alternatives: { rightAnswer: number; alternatives: (string | number)[] }[] =
+  [];
 let shouldChangeFontSize: { buttonFontSize?: number; fontSize?: number }[] = [];
 let seed: string | undefined = undefined;
 let random: (() => number) | undefined = undefined;
@@ -143,12 +144,12 @@ function randomOperation(max: number) {
 }
 
 function createAlternatives(questionNumber: number) {
-  let right = randomNumberSeeded(0, 3);
+  let rightAnswer = randomNumberSeeded(0, 3);
   let currentAlternatives = [];
   for (let i = 0; i < 4; i++) {
     let alternative: string | number = '';
 
-    if (i === right) {
+    if (i === rightAnswer) {
       alternative = answers[questionNumber];
     } else {
       alternative = Math.ceil(
@@ -162,7 +163,7 @@ function createAlternatives(questionNumber: number) {
     currentAlternatives.push(alternative);
   }
 
-  return { alternatives: currentAlternatives, right: right };
+  return { alternatives: currentAlternatives, rightAnswer };
 }
 
 function scientificNotationToFloat(coefficient: number, exponent: number) {
@@ -180,13 +181,13 @@ function createScientificNotationQuestion() {
 
   let answer = scientificNotationToFloat(randomCoefficient, randomExponent);
 
-  let right = randomNumberSeeded(0, 3);
+  let rightAnswer = randomNumberSeeded(0, 3);
   let currentAlternatives = [];
 
   for (let i = 0; i < 4; i++) {
     let alternative = '';
 
-    if (i === right) {
+    if (i === rightAnswer) {
       alternative = answer.toLocaleString('pt-BR', {
         minimumFractionDigits: Math.max(-randomExponent, 0)
       });
@@ -208,7 +209,7 @@ function createScientificNotationQuestion() {
   }
 
   answers.push(answer);
-  alternatives.push({ alternatives: currentAlternatives, right: right });
+  alternatives.push({ alternatives: currentAlternatives, rightAnswer });
 }
 
 type intervalI = {
@@ -242,8 +243,9 @@ function shuffle(array: any[]) {
     currentIndex--;
 
     // And swap it with the current element.
-    array[currentIndex] = array[randomIndex];
-    array[randomIndex] = array[currentIndex];
+    const temp = array[currentIndex];
+    array.splice(currentIndex, 1, array[randomIndex]);
+    array.splice(randomIndex, 1, temp);
   }
 
   return array;
@@ -416,11 +418,43 @@ function createUnionAlternatives(
   return currentAlternativesRaw.map(formatInterval);
 }
 
+function createReunionAlternatives(
+  currentAlternativesRaw: any[],
+  intervals: intervalI[],
+  smallestStarting: number,
+  ending: number,
+  firstOpeningClosed: number,
+  secondEndingClosed: number
+) {
+  currentAlternativesRaw[0].openingClosed = (firstOpeningClosed + 1) % 2;
+  currentAlternativesRaw[1].endingClosed = (secondEndingClosed + 1) % 2;
+
+  currentAlternativesRaw[2].start = intervals[smallestStarting].start;
+  currentAlternativesRaw[2].end = intervals[(ending + 1) % 2].end;
+
+  currentAlternativesRaw[3].start = intervals[smallestStarting].end;
+  currentAlternativesRaw[3].end = intervals[(ending + 1) % 2].end;
+
+  for (let i = 0; i < 4; i++) {
+    currentAlternativesRaw[i] = turnClosings(
+      {
+        empty: false,
+        start: intervals[smallestStarting].start,
+        end: intervals[(ending + 1) % 2].end,
+        openingClosed: intervals[smallestStarting].openingClosed,
+        endingClosed: intervals[(ending + 1) % 2].endingClosed
+      },
+      i
+    );
+
+    return currentAlternativesRaw.map(formatInterval);
+  }
+}
 function createIntervalQuestion(): void {
   let intervals = [createRandomInterval(), createRandomInterval()];
 
   let typeofQuestion = randomNumberSeeded(0, 1);
-  let right = randomNumberSeeded(0, 3);
+  let rightAnswer = randomNumberSeeded(0, 3);
 
   let question = intervals
     .map(formatInterval)
@@ -441,6 +475,7 @@ function createIntervalQuestion(): void {
   }
   let smallestEnding = intervals[0].end < intervals[1].end ? 0 : 1;
   let smallestStarting = intervals[0].start < intervals[1].start ? 0 : 1;
+  let largestEnding = intervals[0].end > intervals[1].end ? 0 : 1;
 
   answer =
     typeofQuestion === 0
@@ -451,7 +486,21 @@ function createIntervalQuestion(): void {
     typeof answer === 'string' ? answer : formatInterval(answer);
 
   let currentAlternatives = [];
-  let currentAlternativesRaw = [clone(answer), clone(answer), clone(answer)];
+  let desiredInterval: intervalI | string =
+    typeofQuestion !== 0 &&
+    (typeof answer === 'string' || (answer as any).empty)
+      ? {
+          ...intervals[smallestStarting],
+          end: intervals[largestEnding].end,
+          endingClosed: intervals[largestEnding].endingClosed
+        }
+      : answer;
+
+  let currentAlternativesRaw = [
+    clone(desiredInterval),
+    clone(desiredInterval),
+    clone(desiredInterval)
+  ];
 
   if (typeofQuestion === 0) {
     currentAlternatives = createUnionAlternatives(
@@ -462,55 +511,38 @@ function createIntervalQuestion(): void {
       answerString
     );
   } else {
-    currentAlternativesRaw.push(clone(answer));
+    currentAlternativesRaw.push(clone(desiredInterval));
+
+    let firstOpeningClosed = intervals[smallestStarting].openingClosed;
+    let secondEndingClosed = intervals[largestEnding].endingClosed;
+    let ending = largestEnding;
 
     if (typeof answer !== 'string' && !answer.empty) {
-      currentAlternativesRaw[0].openingClosed = (answer.openingClosed! + 1) % 2;
-      currentAlternativesRaw[1].endingClosed = (answer.endingClosed! + 1) % 2;
-
-      currentAlternativesRaw[2].start = intervals[smallestStarting].start;
-      currentAlternativesRaw[2].end = intervals[(smallestEnding + 1) % 2].end;
-
-      currentAlternativesRaw[3].start = intervals[smallestStarting].end;
-      currentAlternativesRaw[3].end = intervals[(smallestEnding + 1) % 2].end;
-
-      for (let i = 0; i < 4; i++) {
-        if (!answer.empty) {
-          let alternative = currentAlternativesRaw[i];
-          currentAlternatives.push(formatInterval(alternative));
-        } else {
-          currentAlternatives.push(
-            formatInterval(
-              turnClosings(
-                {
-                  empty: false,
-                  start: intervals[smallestStarting].start,
-                  end: intervals[(smallestEnding + 1) % 2].end,
-                  openingClosed: intervals[smallestStarting].openingClosed,
-                  endingClosed: intervals[(smallestEnding + 1) % 2].endingClosed
-                },
-                i
-              )
-            )
-          );
-        }
-      }
+      firstOpeningClosed = answer.openingClosed!;
+      secondEndingClosed = answer.endingClosed!;
+      ending = smallestEnding;
     }
+
+    currentAlternatives = createReunionAlternatives(
+      currentAlternativesRaw,
+      intervals,
+      smallestStarting,
+      ending,
+      firstOpeningClosed,
+      secondEndingClosed
+    )!;
   }
 
   currentAlternatives = shuffle(currentAlternatives);
 
-  if (typeof answer === 'string' || !answer.empty) {
-    if (randomNumberSeeded(0, 2) === 1) {
-      currentAlternatives[randomNumberSeeded(0, 2)] = formatInterval({
-        empty: true
-      });
-    }
-  }
+  currentAlternatives.splice(rightAnswer, 1, answerString);
 
-  currentAlternatives[right] = answerString;
   answers.push(answerString);
-  alternatives.push({ alternatives: currentAlternatives, right: right });
+
+  alternatives.push({
+    alternatives: currentAlternatives,
+    rightAnswer
+  });
 }
 
 function createNonArithmetic(i: number) {

@@ -1,21 +1,33 @@
 import redis from '@lib/redis';
-import { questionSchema } from '@lib/schema';
+import { questionSchema, type Question } from '@lib/schema';
 import { error, redirect, type Load } from '@sveltejs/kit';
 
 export const ssr = true;
 
 export const load: Load = async ({ url }) => {
-  let seed = url.searchParams.get('seed');
-  let time = parseInt(url.searchParams.get('time')!);
-  let quizStarted = url.searchParams.get('quizStarted');
-  let eachQuestionTime = url.searchParams.get('eachQuestionTime')?.split(',')!;
+  const seed = url.searchParams.get('seed');
+  const time = parseInt(url.searchParams.get('time')!);
+  const quizStarted = url.searchParams.get('quizStarted');
+  const eachQuestionTime = decodeURIComponent(
+    url.searchParams.get('eachQuestionTime')!
+  ).split(',')!;
 
-  const quizData = {
+  type NullableQuestion = {
+    [K in keyof Question]?: Question[K] | null;
+  };
+
+  const quizData: NullableQuestion = {
     seed,
     time,
     quizStarted,
     eachQuestionTime
   };
+
+  const setSeed = url.searchParams.get('setSeed');
+
+  if (setSeed !== null) {
+    quizData.setSeed = setSeed === 'true';
+  }
 
   if (!seed || !time || !quizStarted || !eachQuestionTime) return;
 
@@ -23,9 +35,12 @@ export const load: Load = async ({ url }) => {
 
   try {
     const details = questionSchema.parse(quizData);
-    id = (await redis.incr('stats')) || 0;
-    await redis.set(id.toString(), JSON.stringify(details));
+
+    const length = await redis.hlen('details');
+    id = length === 0 || !length ? 0 : length + 1;
+    console.log(await redis.hsetnx('details', id.toString(), details));
   } catch (err) {
+    console.log(err);
     error(400, 'Something went wrong!');
   }
 

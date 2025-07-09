@@ -1,6 +1,6 @@
 <script lang="ts">
   import Question from '@/components/Question.svelte';
-  import { createQuesions } from '@/util/applab.js';
+  import { createQuestions } from '@/util/applab.js';
   import {
     format,
     formatDistanceStrict,
@@ -22,7 +22,7 @@
 
   let { seed, time, quizStarted, eachQuestionTime } = data;
 
-  const { alternatives, answers, questions, seeds } = createQuesions(seed);
+  const { alternatives, answers, questions, seeds } = createQuestions(seed);
 
   let currentQuestionIndex = 0;
   let clipboard = () => {
@@ -125,3 +125,4 @@
 </span>
 
 <p class="madeBy">Feito por Henrique</p>
+<a href="/"><button class="back">Voltar</button></a>

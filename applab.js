@@ -218,12 +218,12 @@ function formatInterval(interval) {
   return typeof interval === 'string'
     ? interval
     : interval.empty
-    ? '∅'
-    : (interval.openingClosed === 1 ? '[' : ']') +
-      (interval.start === -Infinity ? '-∞' : interval.start) +
-      ', ' +
-      (interval.end === Infinity ? '∞' : interval.end) +
-      (interval.endingClosed === 1 ? ']' : '[');
+      ? '∅'
+      : (interval.openingClosed === 1 ? '[' : ']') +
+        (interval.start === -Infinity ? '-∞' : interval.start) +
+        ', ' +
+        (interval.end === Infinity ? '∞' : interval.end) +
+        (interval.endingClosed === 1 ? ']' : '[');
 }
 
 function shuffle(array) {
@@ -678,8 +678,8 @@ for (var i = 0; i < 4; i++) {
 onEvent('seedInput', 'change', function () {
   var text = getText('seedInput').trim();
 
-  if (text.length > 9) {
-    setText('seedInput', text.substring(0, 9));
+  if (text.length > 15) {
+    setText('seedInput', text.substring(0, 15));
     return;
   }
 
@@ -716,7 +716,9 @@ onEvent('moreStatistics', 'click', function () {
       finalTime +
       '&quizStarted=' +
       quizStarted +
+      '&setSeed=' +
+      setSeed +
       '&eachQuestionTime=' +
-      eachQuestionTime.join(',')
+      encodeURIComponent(eachQuestionTime.join(','))
   );
 });
