@@ -214,7 +214,11 @@ function createScientificNotationQuestion() {
         currentAlternatives.push(alternative);
     }
 
-    answers.push(answer);
+    answers.push(
+        answer.toLocaleString('pt-BR', {
+            minimumFractionDigits: Math.max(-randomExponent, 0)
+        })
+    );
     alternatives.push({ alternatives: currentAlternatives, rightAnswer });
 }
 
@@ -232,9 +236,17 @@ function formatInterval(interval: string | intervalI) {
         : interval.empty
           ? '∅'
           : (interval.openingClosed === 1 ? '[' : ']') +
-            (interval.start === -Infinity ? '-∞' : interval.start) +
+            (interval.start === -Infinity
+                ? '-∞'
+                : interval.start === Infinity
+                  ? '+∞'
+                  : interval.start) +
             ', ' +
-            (interval.end === Infinity ? '∞' : interval.end) +
+            (interval.end === Infinity
+                ? '∞'
+                : interval.end === -Infinity
+                  ? '-∞'
+                  : interval.end) +
             (interval.endingClosed === 1 ? ']' : '[');
 }
 
@@ -473,9 +485,10 @@ function createIntervalQuestion(): void {
     let typeofQuestion = randomNumberSeeded(0, 1);
     let rightAnswer = randomNumberSeeded(0, 3);
 
-    let question = intervals
-        .map(formatInterval)
-        .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ');
+    let question =
+        intervals
+            .map(formatInterval)
+            .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ') + ' =';
 
     questions.push(question);
 
@@ -604,7 +617,7 @@ function resetQuestions() {
 
         let question = !!readable[operation]
             ? readable[operation](numbers[0], numbers[1])
-            : numbers.join(' ' + operation + ' ');
+            : numbers.join(' ' + operation + ' ') + ' =';
 
         questions.push(question);
         answers.push(operations[operation](numbers[0], numbers[1]));
