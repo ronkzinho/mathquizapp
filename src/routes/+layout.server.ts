@@ -48,8 +48,11 @@ export const load: Load = async ({ url }) => {
 
         // New quiz → assign new ID
         const newId = (await redis.incr('stats')).toString();
-        await redis.set(`quiz:digest:${digest}`, newId);
-        await redis.set(`quiz:${newId}`, JSON.stringify(details));
+
+        await Promise.all([
+            redis.set(`quiz:${newId}`, JSON.stringify(details)),
+            redis.set(`quiz:digest:${digest}`, newId)
+        ]);
         id = newId;
     } catch (err) {
         error(400, 'Something went wrong!');
