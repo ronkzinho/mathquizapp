@@ -179,13 +179,18 @@ function scientificNotationToFloat(coefficient: number, exponent: number) {
 
 function createScientificNotationQuestion() {
     let randomExponent = randomNumberSeeded(-6, 6);
-    let randomCoefficient = randomNumberSeeded(1, 100);
+    let randomCoefficient = randomNumberSeeded(1, 9);
 
     questions.push(
         randomCoefficient + ' x ' + readable['^'](10, randomExponent)
     );
 
-    let answer = scientificNotationToFloat(randomCoefficient, randomExponent);
+    let answer = scientificNotationToFloat(
+        randomCoefficient,
+        randomExponent
+    ).toLocaleString('pt-BR', {
+        minimumFractionDigits: Math.max(-randomExponent, 0)
+    });
 
     let rightAnswer = randomNumberSeeded(0, 3);
     let currentAlternatives = [];
@@ -194,9 +199,7 @@ function createScientificNotationQuestion() {
         let alternative = '';
 
         if (i === rightAnswer) {
-            alternative = answer.toLocaleString('pt-BR', {
-                minimumFractionDigits: Math.max(-randomExponent, 0)
-            });
+            alternative = answer;
         } else {
             let randomAlternativeExponent = randomNumberSeeded(-6, 6);
             while (randomAlternativeExponent === randomExponent) {
@@ -214,11 +217,7 @@ function createScientificNotationQuestion() {
         currentAlternatives.push(alternative);
     }
 
-    answers.push(
-        answer.toLocaleString('pt-BR', {
-            minimumFractionDigits: Math.max(-randomExponent, 0)
-        })
-    );
+    answers.push(answer);
     alternatives.push({ alternatives: currentAlternatives, rightAnswer });
 }
 
@@ -257,7 +256,7 @@ function shuffle(array: any[]) {
     // While there remain elements to shuffle.
     while (currentIndex !== 0) {
         // Pick a remaining element.
-        randomIndex = randomNumberSeeded(0, currentIndex);
+        randomIndex = randomNumberSeeded(0, currentIndex - 1);
         currentIndex--;
 
         // And swap it with the current element.
