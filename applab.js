@@ -1,3 +1,4 @@
+// VERSION 1.0
 var questions = [];
 var answers = [];
 var currentQuestion = 0;
@@ -382,15 +383,6 @@ function turnClosings(interval, i) {
     interval.openingClosed += (1 + Math.floor((i / 2) % 2)) % 2;
     interval.endingClosed += (1 + (i % 2)) % 2;
     return interval;
-}
-function turnAnswerClosings(intervals, i) {
-    var clonedIntervals = intervals.map(clone);
-    clonedIntervals[i % 2] = turnClosings(
-        clone(intervals[i % clonedIntervals.length]),
-        (i % clonedIntervals.length) % 2
-    );
-    i++;
-    return formatIntervals.apply(this, clonedIntervals);
 }
 function handleFakeUnionAlternative(fakeUnionAlternativesRaw, x) {
     var result = [];

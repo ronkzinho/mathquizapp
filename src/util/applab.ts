@@ -1,3 +1,4 @@
+// VERSION 1.0
 let questions: string[] = [];
 let answers: (number | string)[] = [];
 // var currentQuestion = 0;
