@@ -19,6 +19,10 @@ module.exports = {
     },
     plugins: [
         ['@babel/plugin-transform-object-rest-spread', { useBuiltIns: true }],
+        [
+            '@babel/plugin-transform-block-scoping',
+            { throwIfClosureRequired: true }
+        ],
 
         function transformIncludesAndStripExports() {
             return {
@@ -52,13 +56,9 @@ module.exports = {
 
                         // Transform `Object.assign` → `clone`
                         if (
-                            t.isMemberExpression(path.node.callee) &&
-                            t.isIdentifier(path.node.callee.object, {
-                                name: 'Object'
-                            }) &&
-                            t.isIdentifier(path.node.callee.property, {
-                                name: 'assign'
-                            })
+                            t.isMemberExpression(callee) &&
+                            t.isIdentifier(callee.object, { name: 'Object' }) &&
+                            t.isIdentifier(callee.property, { name: 'assign' })
                         ) {
                             path.replaceWith(
                                 t.callExpression(
@@ -66,7 +66,30 @@ module.exports = {
                                     path.node.arguments
                                 )
                             );
-                            return;
+                            return; // Done for this match
+                        }
+
+                        // Transform `f(...args)` → `f.apply(this, args)`
+                        if (
+                            path.node.arguments.some((arg) =>
+                                t.isSpreadElement(arg)
+                            )
+                        ) {
+                            const spreadArg = path.node.arguments.find((arg) =>
+                                t.isSpreadElement(arg)
+                            );
+                            if (spreadArg) {
+                                path.replaceWith(
+                                    t.callExpression(
+                                        t.memberExpression(
+                                            callee,
+                                            t.identifier('apply')
+                                        ),
+                                        [t.thisExpression(), spreadArg.argument]
+                                    )
+                                );
+                                return; // Done for this match
+                            }
                         }
                     },
 

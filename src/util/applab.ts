@@ -1,8 +1,13 @@
 let questions: string[] = [];
 let answers: (number | string)[] = [];
+// var currentQuestion = 0;
+// var timer = 0;
+// var quizStarted = null;
+// var interval = null;
 let alternatives: { rightAnswer: number; alternatives: (string | number)[] }[] =
     [];
 let shouldChangeFontSize: { buttonFontSize?: number; fontSize?: number }[] = [];
+// var setSeed = false;
 let seed: string | undefined = undefined;
 let random: (() => number) | undefined = undefined;
 let finalTime: number | null = null;
@@ -153,12 +158,20 @@ function createAlternatives(questionNumber: number) {
             alternative = answers[questionNumber];
         } else {
             alternative = Math.ceil(
-                operations[randomOperation(!!answers[questionNumber] ? 1 : 2)](
-                    answers[questionNumber] as number,
-                    randomNumberSeeded(2, 6)
-                )
+                operations[
+                    randomOperation(
+                        !!answers[questionNumber]
+                            ? 1
+                            : answers[questionNumber] === 0
+                              ? 1
+                              : 2
+                    )
+                ](answers[questionNumber] as number, randomNumberSeeded(2, 6))
             );
-            if (currentAlternatives.includes(alternative)) {
+            if (
+                currentAlternatives.includes(alternative) ||
+                alternative === answers[alternative]
+            ) {
                 i--;
                 continue;
             }
@@ -194,27 +207,29 @@ function createScientificNotationQuestion() {
 
     let rightAnswer = randomNumberSeeded(0, 3);
     let currentAlternatives = [];
+    let addedExponents = [randomExponent];
 
     for (let i = 0; i < 4; i++) {
-        let alternative = '';
-
         if (i === rightAnswer) {
-            alternative = answer;
-        } else {
-            let randomAlternativeExponent = randomNumberSeeded(-6, 6);
-            while (randomAlternativeExponent === randomExponent) {
-                randomAlternativeExponent = randomNumberSeeded(-4, 4);
-            }
+            currentAlternatives.push(answer);
+            continue;
+        }
 
-            alternative = scientificNotationToFloat(
+        let randomAlternativeExponent = randomNumberSeeded(-6, 6);
+        if (addedExponents.includes(randomAlternativeExponent)) {
+            i--;
+            continue;
+        }
+
+        currentAlternatives.push(
+            scientificNotationToFloat(
                 randomCoefficient,
                 randomAlternativeExponent
             ).toLocaleString('pt-BR', {
                 minimumFractionDigits: Math.max(-randomAlternativeExponent, 0)
-            });
-        }
-
-        currentAlternatives.push(alternative);
+            })
+        );
+        addedExponents.push(randomAlternativeExponent);
     }
 
     answers.push(answer);
@@ -229,24 +244,34 @@ type intervalI = {
     endingClosed?: number;
 };
 
-function formatInterval(interval: string | intervalI) {
-    return typeof interval === 'string'
-        ? interval
-        : interval.empty
-          ? '∅'
-          : (interval.openingClosed === 1 ? '[' : ']') +
-            (interval.start === -Infinity
-                ? '-∞'
-                : interval.start === Infinity
-                  ? '+∞'
-                  : interval.start) +
-            ', ' +
-            (interval.end === Infinity
-                ? '∞'
-                : interval.end === -Infinity
-                  ? '-∞'
-                  : interval.end) +
-            (interval.endingClosed === 1 ? ']' : '[');
+function formatIntervals(...intervals: (string | intervalI)[]) {
+    let results: string[] = [];
+
+    for (let i = 0; i < intervals.length; i++) {
+        let interval = intervals[i];
+
+        results.push(
+            typeof interval === 'string'
+                ? interval
+                : interval.empty
+                  ? '∅'
+                  : (interval.openingClosed === 1 ? '[' : ']') +
+                    (interval.start === -Infinity
+                        ? '-∞'
+                        : interval.start === Infinity
+                          ? '+∞'
+                          : interval.start) +
+                    ', ' +
+                    (interval.end === Infinity
+                        ? '∞'
+                        : interval.end === -Infinity
+                          ? '-∞'
+                          : interval.end) +
+                    (interval.endingClosed === 1 ? ']' : '[')
+        );
+    }
+
+    return results.join(' ∪ ');
 }
 
 function shuffle(array: any[]) {
@@ -286,26 +311,24 @@ function createRandomInterval() {
     };
 }
 
-function clone(...objs: any) {
-    const result: any = {};
-    for (let i = 0; i < objs.length; i++) {
-        const obj = objs[i];
-        for (let prop in obj) {
-            if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-                result[prop] = clone(obj[prop]);
-            } else {
-                result[prop] = obj[prop];
-            }
+function clone<T>(obj: T): T {
+    if (Array.isArray(obj)) {
+        // Recursively clone each element in the array
+        return obj.map(clone) as T;
+    } else if (typeof obj === 'object' && obj !== null) {
+        const result: any = {};
+        for (const prop in obj) {
+            result[prop] = clone((obj as any)[prop]);
         }
+        return result;
     }
-    return result;
+    return obj;
 }
 function solveUnion(
     intervals: intervalI[],
     smallestStarting: number,
-    smallestEnding: number,
-    question: string
-) {
+    smallestEnding: number
+): intervalI | intervalI[] {
     if (
         intervals[smallestEnding].end! <
             intervals[(smallestEnding + 1) % 2].start! || // se o menor final de intervalo for menor que o maior início de intervalo do outro
@@ -314,23 +337,31 @@ function solveUnion(
             (intervals[smallestEnding].endingClosed === 0 ||
                 intervals[(smallestEnding + 1) % 2].openingClosed === 0))
     ) {
-        return question;
+        // Sort intervals by their start value (smallestStarting first)
+        return clone(intervals).sort((a, b) => a.start! - b.start!);
     }
 
-    function getClosed(startingOrEnding: number) {
-        return intervals[(startingOrEnding + 1) % 2].end ===
-            intervals[startingOrEnding].end
-            ? intervals[
-                  intervals[(startingOrEnding + 1) % 2] >=
-                  intervals[startingOrEnding]
-                      ? (startingOrEnding + 1) % 2
-                      : startingOrEnding
-              ]
-            : intervals[startingOrEnding];
-    }
-
-    let openingClosed = getClosed(smallestStarting).openingClosed;
-    let endingClosed = getClosed((smallestEnding + 1) % 2).endingClosed;
+    // function getClosed(startingOrEnding: number, isOpening: boolean) {
+    //     const closingProp = isOpening ? 'openingClosed' : 'endingClosed';
+    //     return intervals[(startingOrEnding + 1) % 2].end ===
+    //         intervals[startingOrEnding].end
+    //         ? intervals[
+    //               (
+    //                   isOpening
+    //                       ? intervals[(startingOrEnding + 1) % 2][
+    //                             closingProp
+    //                         ]! <= intervals[startingOrEnding][closingProp]!
+    //                       : intervals[(startingOrEnding + 1) % 2][
+    //                             closingProp
+    //                         ]! >= intervals[startingOrEnding][closingProp]!
+    //               )
+    //                   ? (startingOrEnding + 1) % 2
+    //                   : startingOrEnding
+    //           ]
+    //         : intervals[startingOrEnding];
+    // }
+    let openingClosed = intervals[smallestStarting].openingClosed;
+    let endingClosed = intervals[(smallestEnding + 1) % 2].endingClosed;
 
     return {
         empty: false,
@@ -374,6 +405,10 @@ function solveIntersection(
     }
 }
 
+/**
+ * openingClosed: [1, 1, 0, 0] (changes every 2 iterations);
+ * endingClosed: [1, 0, 1, 0] (alternates every iteration
+ */
 function turnClosings(interval: intervalI, i: number) {
     interval.openingClosed! += (1 + Math.floor((i / 2) % 2)) % 2;
     interval.endingClosed! += (1 + (i % 2)) % 2;
@@ -381,69 +416,149 @@ function turnClosings(interval: intervalI, i: number) {
     return interval;
 }
 
-function turnAnswerClosings(intervals: intervalI[], i: number) {
-    let clonedIntervals = intervals.map(clone);
-    clonedIntervals[i % 2] = turnClosings(
-        clone(intervals[i % clonedIntervals.length]),
-        (i % clonedIntervals.length) % 2
+function handleFakeUnionAlternative(
+    fakeUnionAlternativesRaw: intervalI[][],
+    x: number
+) {
+    const result = [];
+    for (let i = 0; i < fakeUnionAlternativesRaw[x].length; i++) {
+        const randomAlternative = fakeUnionAlternativesRaw[x][i];
+        result.push({
+            ...randomAlternative,
+            openingClosed: randomAlternative.openingClosed! ^ (i + (x % 2)) % 2,
+            endingClosed:
+                randomAlternative.endingClosed! ^ (i + (x >= 2 ? 1 : 0)) % 2
+        });
+    }
+    return result;
+}
+
+function handleUnionWithEmptyIntersection(
+    currentAlternativesRaw: intervalI[][]
+) {
+    let fakeUnionAlternativesRaw: intervalI[][] = clone(currentAlternativesRaw);
+
+    let shuffledAlternativesRaw = shuffle(
+        currentAlternativesRaw.map((currentAlternative, i) => {
+            return {
+                start: currentAlternative[0][i % 2 === 0 ? 'start' : 'end'],
+                openingClosed:
+                    currentAlternative[0][
+                        i % 2 === 0 ? 'openingClosed' : 'endingClosed'
+                    ],
+                end: currentAlternative[1][i % 2 === 0 ? 'end' : 'start'],
+                endingClosed:
+                    currentAlternative[1][
+                        i % 2 === 0 ? 'endingClosed' : 'openingClosed'
+                    ]
+            };
+        }) as intervalI[]
     );
 
-    i++;
+    for (let i = 0; i < 3; i++) {
+        shuffledAlternativesRaw.splice(
+            i,
+            1,
+            turnClosings(
+                {
+                    ...shuffledAlternativesRaw[i],
+                    openingClosed:
+                        shuffledAlternativesRaw[i].openingClosed +
+                        ((i % 2 === 0 ? 1 : 0) % 2),
+                    endingClosed:
+                        shuffledAlternativesRaw[i].endingClosed +
+                        ((i > 1 ? 1 : 0) % 2)
+                },
+                i
+            )
+        );
+    }
 
-    return clonedIntervals.map(formatInterval).join(' ∪ ');
+    for (let x = 0; x < 4; x++) {
+        fakeUnionAlternativesRaw.splice(
+            x,
+            1,
+            handleFakeUnionAlternative(fakeUnionAlternativesRaw, x)
+        );
+    }
+
+    let shuffledFakeUnionAlternativesRaw: intervalI[][] = shuffle(
+        clone(fakeUnionAlternativesRaw)
+    );
+
+    let currentAlternatives = shuffledAlternativesRaw.map((interval) =>
+        formatIntervals(interval)
+    );
+
+    currentAlternatives.splice(
+        0,
+        2,
+        ...shuffledFakeUnionAlternativesRaw
+            .map((intervals) => formatIntervals(...intervals))
+            .slice(0, 2)
+    );
+
+    return currentAlternatives;
 }
 
 function createUnionAlternatives(
-    currentAlternativesRaw: any[],
+    currentAlternativesRaw: (intervalI | intervalI[] | string)[],
     intervals: intervalI[],
     smallestStarting: number,
-    smallestEnding: number,
-    answerString: string
+    smallestEnding: number
 ) {
+    if (
+        Array.isArray(currentAlternativesRaw) &&
+        Array.isArray(currentAlternativesRaw[0])
+    )
+        return handleUnionWithEmptyIntersection(
+            currentAlternativesRaw as intervalI[][]
+        );
+
+    // intersection cannot be empty because union is two intervals(array of intervals), eg. [1, 2] ∪ [3, 4] intersecion -> empty
+
     let intersection = solveIntersection(
         intervals,
         smallestStarting,
         smallestEnding
-    );
+    ) as intervalI & { empty: false };
 
-    let intervalsTurnedClosings = 0;
-    let randomIntervalTurnedClosings = 0;
+    let random1 = randomNumberSeeded(0, 2);
 
-    function createAlternativeUnionWithEmptyInterval() {
-        return randomNumberSeeded(0, 1) === 1
-            ? turnAnswerClosings(
-                  [
-                      {
-                          empty: false,
-                          start: intervals[smallestStarting].start,
-                          end: intervals[(smallestEnding + 1) % 2].end,
-                          openingClosed:
-                              intervals[smallestStarting].endingClosed,
-                          endingClosed:
-                              intervals[(smallestEnding + 1) % 2].openingClosed
-                      }
-                  ],
-                  randomIntervalTurnedClosings
-              )
-            : turnAnswerClosings(intervals, intervalsTurnedClosings);
-    }
+    // let random2 = randomNumberSeeded(0, 3);
+    currentAlternativesRaw.splice(random1, 1, clone(intersection));
+    currentAlternativesRaw.splice(3, 1, clone(intersection));
 
-    if (answerString.indexOf('∪') !== -1) {
-        currentAlternativesRaw = currentAlternativesRaw.map(
-            createAlternativeUnionWithEmptyInterval
+    let currentAlternatives: string[] = [];
+
+    // Flip the closings of the currentAlternativesRaw intervals, similar to reunion and handleUnionWithEmptyIntersection logic
+    for (let i = 0; i < currentAlternativesRaw.length - 1; i++) {
+        const currentAlternativeRaw = currentAlternativesRaw[i] as intervalI;
+        currentAlternatives.push(
+            i === random1
+                ? formatIntervals(turnClosings(currentAlternativeRaw, i))
+                : formatIntervals(
+                      turnClosings(
+                          {
+                              empty: false,
+                              start: intervals[smallestStarting].start,
+                              end: intervals[(smallestEnding + 1) % 2].end,
+                              openingClosed:
+                                  intervals[smallestStarting].openingClosed,
+                              endingClosed:
+                                  intervals[(smallestEnding + 1) % 2]
+                                      .endingClosed
+                          },
+                          i
+                      )
+                  )
         );
-        currentAlternativesRaw.push(createAlternativeUnionWithEmptyInterval());
-    } else {
-        currentAlternativesRaw.push(intersection);
-        for (let i = 0; i < 3; i++) {
-            currentAlternativesRaw[i] = turnClosings(
-                currentAlternativesRaw[i],
-                i
-            );
-        }
     }
 
-    return currentAlternativesRaw.map(formatInterval);
+    return [
+        ...currentAlternatives,
+        formatIntervals((currentAlternativesRaw as intervalI[])[3])
+    ];
 }
 
 function createReunionAlternatives(
@@ -474,9 +589,8 @@ function createReunionAlternatives(
             },
             i
         );
-
-        return currentAlternativesRaw.map(formatInterval);
     }
+    return currentAlternativesRaw.map((interval) => formatIntervals(interval));
 }
 function createIntervalQuestion(): void {
     let intervals = [createRandomInterval(), createRandomInterval()];
@@ -486,12 +600,12 @@ function createIntervalQuestion(): void {
 
     let question =
         intervals
-            .map(formatInterval)
+            .map((interval) => formatIntervals(interval))
             .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ') + ' =';
 
     questions.push(question);
 
-    let answer: intervalI | string = { empty: false };
+    let answer: intervalI | intervalI[] = { empty: false };
     if (
         (intervals[0].start === intervals[1].start &&
             (intervals[0].openingClosed !== intervals[1].openingClosed ||
@@ -508,16 +622,16 @@ function createIntervalQuestion(): void {
 
     answer =
         typeofQuestion === 0
-            ? solveUnion(intervals, smallestStarting, smallestEnding, question)
+            ? solveUnion(intervals, smallestStarting, smallestEnding)
             : solveIntersection(intervals, smallestStarting, smallestEnding);
 
-    let answerString =
-        typeof answer === 'string' ? answer : formatInterval(answer);
+    let answerString = Array.isArray(answer)
+        ? formatIntervals(...answer)
+        : formatIntervals(answer);
 
     let currentAlternatives = [];
-    let desiredInterval: intervalI | string =
-        typeofQuestion !== 0 &&
-        (typeof answer === 'string' || (answer as any).empty)
+    let desiredInterval: intervalI | intervalI[] =
+        typeofQuestion !== 0 && !Array.isArray(answer) && answer.empty
             ? {
                   ...intervals[smallestStarting],
                   end: intervals[largestEnding].end,
@@ -528,6 +642,7 @@ function createIntervalQuestion(): void {
     let currentAlternativesRaw = [
         clone(desiredInterval),
         clone(desiredInterval),
+        clone(desiredInterval),
         clone(desiredInterval)
     ];
 
@@ -536,17 +651,14 @@ function createIntervalQuestion(): void {
             currentAlternativesRaw,
             intervals,
             smallestStarting,
-            smallestEnding,
-            answerString
+            smallestEnding
         );
     } else {
-        currentAlternativesRaw.push(clone(desiredInterval));
-
         let firstOpeningClosed = intervals[smallestStarting].openingClosed;
         let secondEndingClosed = intervals[largestEnding].endingClosed;
         let ending = largestEnding;
 
-        if (typeof answer !== 'string' && !answer.empty) {
+        if (!Array.isArray(answer) && !answer.empty) {
             firstOpeningClosed = answer.openingClosed!;
             secondEndingClosed = answer.endingClosed!;
             ending = smallestEnding;

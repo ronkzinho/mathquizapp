@@ -153,12 +153,20 @@ function createAlternatives(questionNumber) {
             alternative = answers[questionNumber];
         } else {
             alternative = Math.ceil(
-                operations[randomOperation(!!answers[questionNumber] ? 1 : 2)](
-                    answers[questionNumber],
-                    randomNumberSeeded(2, 6)
-                )
+                operations[
+                    randomOperation(
+                        !!answers[questionNumber]
+                            ? 1
+                            : answers[questionNumber] === 0
+                              ? 1
+                              : 2
+                    )
+                ](answers[questionNumber], randomNumberSeeded(2, 6))
             );
-            if (currentAlternatives.indexOf(alternative) >= 0) {
+            if (
+                currentAlternatives.indexOf(alternative) >= 0 ||
+                alternative === answers[alternative]
+            ) {
                 i--;
                 continue;
             }
@@ -190,23 +198,26 @@ function createScientificNotationQuestion() {
     });
     var rightAnswer = randomNumberSeeded(0, 3);
     var currentAlternatives = [];
+    var addedExponents = [randomExponent];
     for (var i = 0; i < 4; i++) {
-        var alternative = '';
         if (i === rightAnswer) {
-            alternative = answer;
-        } else {
-            var randomAlternativeExponent = randomNumberSeeded(-6, 6);
-            while (randomAlternativeExponent === randomExponent) {
-                randomAlternativeExponent = randomNumberSeeded(-4, 4);
-            }
-            alternative = scientificNotationToFloat(
+            currentAlternatives.push(answer);
+            continue;
+        }
+        var randomAlternativeExponent = randomNumberSeeded(-6, 6);
+        if (addedExponents.indexOf(randomAlternativeExponent) >= 0) {
+            i--;
+            continue;
+        }
+        currentAlternatives.push(
+            scientificNotationToFloat(
                 randomCoefficient,
                 randomAlternativeExponent
             ).toLocaleString('pt-BR', {
                 minimumFractionDigits: Math.max(-randomAlternativeExponent, 0)
-            });
-        }
-        currentAlternatives.push(alternative);
+            })
+        );
+        addedExponents.push(randomAlternativeExponent);
     }
     answers.push(answer);
     alternatives.push({
@@ -214,24 +225,32 @@ function createScientificNotationQuestion() {
         rightAnswer: rightAnswer
     });
 }
-function formatInterval(interval) {
-    return typeof interval === 'string'
-        ? interval
-        : interval.empty
-          ? '∅'
-          : (interval.openingClosed === 1 ? '[' : ']') +
-            (interval.start === -Infinity
-                ? '-∞'
-                : interval.start === Infinity
-                  ? '+∞'
-                  : interval.start) +
-            ', ' +
-            (interval.end === Infinity
-                ? '∞'
-                : interval.end === -Infinity
-                  ? '-∞'
-                  : interval.end) +
-            (interval.endingClosed === 1 ? ']' : '[');
+function formatIntervals() {
+    var results = [];
+    for (var i = 0; i < arguments.length; i++) {
+        var interval =
+            i < 0 || arguments.length <= i ? undefined : arguments[i];
+        results.push(
+            typeof interval === 'string'
+                ? interval
+                : interval.empty
+                  ? '∅'
+                  : (interval.openingClosed === 1 ? '[' : ']') +
+                    (interval.start === -Infinity
+                        ? '-∞'
+                        : interval.start === Infinity
+                          ? '+∞'
+                          : interval.start) +
+                    ', ' +
+                    (interval.end === Infinity
+                        ? '∞'
+                        : interval.end === -Infinity
+                          ? '-∞'
+                          : interval.end) +
+                    (interval.endingClosed === 1 ? ']' : '[')
+        );
+    }
+    return results.join(' ∪ ');
 }
 function shuffle(array) {
     var currentIndex = array.length,
@@ -267,21 +286,20 @@ function createRandomInterval() {
         endingClosed: end !== Infinity ? randomNumberSeeded(0, 1) : 0 // 1 = closed
     };
 }
-function clone() {
-    var result = {};
-    for (var i = 0; i < arguments.length; i++) {
-        var obj = i < 0 || arguments.length <= i ? undefined : arguments[i];
+function clone(obj) {
+    if (Array.isArray(obj)) {
+        // Recursively clone each element in the array
+        return obj.map(clone);
+    } else if (typeof obj === 'object' && obj !== null) {
+        var result = {};
         for (var prop in obj) {
-            if (typeof obj[prop] === 'object' && obj[prop] !== null) {
-                result[prop] = clone(obj[prop]);
-            } else {
-                result[prop] = obj[prop];
-            }
+            result[prop] = clone(obj[prop]);
         }
+        return result;
     }
-    return result;
+    return obj;
 }
-function solveUnion(intervals, smallestStarting, smallestEnding, question) {
+function solveUnion(intervals, smallestStarting, smallestEnding) {
     if (
         intervals[smallestEnding].end <
             intervals[(smallestEnding + 1) % 2].start ||
@@ -291,21 +309,33 @@ function solveUnion(intervals, smallestStarting, smallestEnding, question) {
             (intervals[smallestEnding].endingClosed === 0 ||
                 intervals[(smallestEnding + 1) % 2].openingClosed === 0))
     ) {
-        return question;
+        // Sort intervals by their start value (smallestStarting first)
+        return clone(intervals).sort(function (a, b) {
+            return a.start - b.start;
+        });
     }
-    function getClosed(startingOrEnding) {
-        return intervals[(startingOrEnding + 1) % 2].end ===
-            intervals[startingOrEnding].end
-            ? intervals[
-                  intervals[(startingOrEnding + 1) % 2] >=
-                  intervals[startingOrEnding]
-                      ? (startingOrEnding + 1) % 2
-                      : startingOrEnding
-              ]
-            : intervals[startingOrEnding];
-    }
-    var openingClosed = getClosed(smallestStarting).openingClosed;
-    var endingClosed = getClosed((smallestEnding + 1) % 2).endingClosed;
+
+    // function getClosed(startingOrEnding: number, isOpening: boolean) {
+    //     const closingProp = isOpening ? 'openingClosed' : 'endingClosed';
+    //     return intervals[(startingOrEnding + 1) % 2].end ===
+    //         intervals[startingOrEnding].end
+    //         ? intervals[
+    //               (
+    //                   isOpening
+    //                       ? intervals[(startingOrEnding + 1) % 2][
+    //                             closingProp
+    //                         ]! <= intervals[startingOrEnding][closingProp]!
+    //                       : intervals[(startingOrEnding + 1) % 2][
+    //                             closingProp
+    //                         ]! >= intervals[startingOrEnding][closingProp]!
+    //               )
+    //                   ? (startingOrEnding + 1) % 2
+    //                   : startingOrEnding
+    //           ]
+    //         : intervals[startingOrEnding];
+    // }
+    var openingClosed = intervals[smallestStarting].openingClosed;
+    var endingClosed = intervals[(smallestEnding + 1) % 2].endingClosed;
     return {
         empty: false,
         start: intervals[smallestStarting].start,
@@ -344,6 +374,10 @@ function solveIntersection(intervals, smallestStarting, smallestEnding) {
         };
     }
 }
+/**
+ * openingClosed: [1, 1, 0, 0] (changes every 2 iterations);
+ * endingClosed: [1, 0, 1, 0] (alternates every iteration
+ */
 function turnClosings(interval, i) {
     interval.openingClosed += (1 + Math.floor((i / 2) % 2)) % 2;
     interval.endingClosed += (1 + (i % 2)) % 2;
@@ -356,55 +390,142 @@ function turnAnswerClosings(intervals, i) {
         (i % clonedIntervals.length) % 2
     );
     i++;
-    return clonedIntervals.map(formatInterval).join(' ∪ ');
+    return formatIntervals.apply(this, clonedIntervals);
+}
+function handleFakeUnionAlternative(fakeUnionAlternativesRaw, x) {
+    var result = [];
+    for (var i = 0; i < fakeUnionAlternativesRaw[x].length; i++) {
+        var randomAlternative = fakeUnionAlternativesRaw[x][i];
+        result.push(
+            clone(
+                clone({}, randomAlternative),
+                {},
+                {
+                    openingClosed:
+                        randomAlternative.openingClosed ^ (i + (x % 2)) % 2,
+                    endingClosed:
+                        randomAlternative.endingClosed ^
+                        (i + (x >= 2 ? 1 : 0)) % 2
+                }
+            )
+        );
+    }
+    return result;
+}
+function handleUnionWithEmptyIntersection(currentAlternativesRaw) {
+    var fakeUnionAlternativesRaw = clone(currentAlternativesRaw);
+    var shuffledAlternativesRaw = shuffle(
+        currentAlternativesRaw.map(function (currentAlternative, i) {
+            return {
+                start: currentAlternative[0][i % 2 === 0 ? 'start' : 'end'],
+                openingClosed:
+                    currentAlternative[0][
+                        i % 2 === 0 ? 'openingClosed' : 'endingClosed'
+                    ],
+                end: currentAlternative[1][i % 2 === 0 ? 'end' : 'start'],
+                endingClosed:
+                    currentAlternative[1][
+                        i % 2 === 0 ? 'endingClosed' : 'openingClosed'
+                    ]
+            };
+        })
+    );
+    for (var i = 0; i < 3; i++) {
+        shuffledAlternativesRaw.splice(
+            i,
+            1,
+            turnClosings(
+                clone(
+                    clone({}, shuffledAlternativesRaw[i]),
+                    {},
+                    {
+                        openingClosed:
+                            shuffledAlternativesRaw[i].openingClosed +
+                            ((i % 2 === 0 ? 1 : 0) % 2),
+                        endingClosed:
+                            shuffledAlternativesRaw[i].endingClosed +
+                            ((i > 1 ? 1 : 0) % 2)
+                    }
+                ),
+                i
+            )
+        );
+    }
+    for (var x = 0; x < 4; x++) {
+        fakeUnionAlternativesRaw.splice(
+            x,
+            1,
+            handleFakeUnionAlternative(fakeUnionAlternativesRaw, x)
+        );
+    }
+    var shuffledFakeUnionAlternativesRaw = shuffle(
+        clone(fakeUnionAlternativesRaw)
+    );
+    var currentAlternatives = shuffledAlternativesRaw.map(function (interval) {
+        return formatIntervals(interval);
+    });
+    currentAlternatives.splice.apply(
+        this,
+        shuffledFakeUnionAlternativesRaw
+            .map(function (intervals) {
+                return formatIntervals.apply(this, intervals);
+            })
+            .slice(0, 2)
+    );
+    return currentAlternatives;
 }
 function createUnionAlternatives(
     currentAlternativesRaw,
     intervals,
     smallestStarting,
-    smallestEnding,
-    answerString
+    smallestEnding
 ) {
+    if (
+        Array.isArray(currentAlternativesRaw) &&
+        Array.isArray(currentAlternativesRaw[0])
+    )
+        return handleUnionWithEmptyIntersection(currentAlternativesRaw);
+
+    // intersection cannot be empty because union is two intervals(array of intervals), eg. [1, 2] ∪ [3, 4] intersecion -> empty
+
     var intersection = solveIntersection(
         intervals,
         smallestStarting,
         smallestEnding
     );
-    var intervalsTurnedClosings = 0;
-    var randomIntervalTurnedClosings = 0;
-    function createAlternativeUnionWithEmptyInterval() {
-        return randomNumberSeeded(0, 1) === 1
-            ? turnAnswerClosings(
-                  [
-                      {
-                          empty: false,
-                          start: intervals[smallestStarting].start,
-                          end: intervals[(smallestEnding + 1) % 2].end,
-                          openingClosed:
-                              intervals[smallestStarting].endingClosed,
-                          endingClosed:
-                              intervals[(smallestEnding + 1) % 2].openingClosed
-                      }
-                  ],
-                  randomIntervalTurnedClosings
-              )
-            : turnAnswerClosings(intervals, intervalsTurnedClosings);
-    }
-    if (answerString.indexOf('∪') !== -1) {
-        currentAlternativesRaw = currentAlternativesRaw.map(
-            createAlternativeUnionWithEmptyInterval
+    var random1 = randomNumberSeeded(0, 2);
+
+    // let random2 = randomNumberSeeded(0, 3);
+    currentAlternativesRaw.splice(random1, 1, clone(intersection));
+    currentAlternativesRaw.splice(3, 1, clone(intersection));
+    var currentAlternatives = [];
+
+    // Flip the closings of the currentAlternativesRaw intervals, similar to reunion and handleUnionWithEmptyIntersection logic
+    for (var i = 0; i < currentAlternativesRaw.length - 1; i++) {
+        var currentAlternativeRaw = currentAlternativesRaw[i];
+        currentAlternatives.push(
+            i === random1
+                ? formatIntervals(turnClosings(currentAlternativeRaw, i))
+                : formatIntervals(
+                      turnClosings(
+                          {
+                              empty: false,
+                              start: intervals[smallestStarting].start,
+                              end: intervals[(smallestEnding + 1) % 2].end,
+                              openingClosed:
+                                  intervals[smallestStarting].openingClosed,
+                              endingClosed:
+                                  intervals[(smallestEnding + 1) % 2]
+                                      .endingClosed
+                          },
+                          i
+                      )
+                  )
         );
-        currentAlternativesRaw.push(createAlternativeUnionWithEmptyInterval());
-    } else {
-        currentAlternativesRaw.push(intersection);
-        for (var i = 0; i < 3; i++) {
-            currentAlternativesRaw[i] = turnClosings(
-                currentAlternativesRaw[i],
-                i
-            );
-        }
     }
-    return currentAlternativesRaw.map(formatInterval);
+    return [].concat(currentAlternatives, [
+        formatIntervals(currentAlternativesRaw[3])
+    ]);
 }
 function createReunionAlternatives(
     currentAlternativesRaw,
@@ -431,8 +552,10 @@ function createReunionAlternatives(
             },
             i
         );
-        return currentAlternativesRaw.map(formatInterval);
     }
+    return currentAlternativesRaw.map(function (interval) {
+        return formatIntervals(interval);
+    });
 }
 function createIntervalQuestion() {
     var intervals = [createRandomInterval(), createRandomInterval()];
@@ -440,7 +563,9 @@ function createIntervalQuestion() {
     var rightAnswer = randomNumberSeeded(0, 3);
     var question =
         intervals
-            .map(formatInterval)
+            .map(function (interval) {
+                return formatIntervals(interval);
+            })
             .join(' ' + (typeofQuestion === 0 ? '∪' : '∩') + ' ') + ' =';
     questions.push(question);
     var answer = {
@@ -461,13 +586,14 @@ function createIntervalQuestion() {
     var largestEnding = intervals[0].end > intervals[1].end ? 0 : 1;
     answer =
         typeofQuestion === 0
-            ? solveUnion(intervals, smallestStarting, smallestEnding, question)
+            ? solveUnion(intervals, smallestStarting, smallestEnding)
             : solveIntersection(intervals, smallestStarting, smallestEnding);
-    var answerString =
-        typeof answer === 'string' ? answer : formatInterval(answer);
+    var answerString = Array.isArray(answer)
+        ? formatIntervals.apply(this, answer)
+        : formatIntervals(answer);
     var currentAlternatives = [];
     var desiredInterval =
-        typeofQuestion !== 0 && (typeof answer === 'string' || answer.empty)
+        typeofQuestion !== 0 && !Array.isArray(answer) && answer.empty
             ? clone(
                   clone({}, intervals[smallestStarting]),
                   {},
@@ -480,6 +606,7 @@ function createIntervalQuestion() {
     var currentAlternativesRaw = [
         clone(desiredInterval),
         clone(desiredInterval),
+        clone(desiredInterval),
         clone(desiredInterval)
     ];
     if (typeofQuestion === 0) {
@@ -487,15 +614,13 @@ function createIntervalQuestion() {
             currentAlternativesRaw,
             intervals,
             smallestStarting,
-            smallestEnding,
-            answerString
+            smallestEnding
         );
     } else {
-        currentAlternativesRaw.push(clone(desiredInterval));
         var firstOpeningClosed = intervals[smallestStarting].openingClosed;
         var secondEndingClosed = intervals[largestEnding].endingClosed;
         var ending = largestEnding;
-        if (typeof answer !== 'string' && !answer.empty) {
+        if (!Array.isArray(answer) && !answer.empty) {
             firstOpeningClosed = answer.openingClosed;
             secondEndingClosed = answer.endingClosed;
             ending = smallestEnding;
@@ -557,7 +682,7 @@ function resetQuestions() {
 
         var question = !!readable[operation]
             ? readable[operation](numbers[0], numbers[1])
-            : numbers.join(' ' + operation + ' ');
+            : numbers.join(' ' + operation + ' ') + ' =';
         questions.push(question);
         answers.push(operations[operation](numbers[0], numbers[1]));
         alternatives.push(createAlternatives(i));

@@ -1,322 +1,367 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
 
 :root {
-  --question-color: rgba(255, 255, 255, 0.02);
+    --question-color: rgba(255, 255, 255, 0.02);
+}
+
+html {
+    background-color: #000000;
 }
 
 body,
 html {
-  height: 100%;
+    height: 100%;
 }
 
 body {
-  background-image: url('/images/4k.jpg');
-  background-size: cover;
-  background-blend-mode: darken;
-  color: white;
-  font-family: 'Roboto';
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-size: 1.4vw;
-  background-repeat: no-repeat;
-}
-
-.header > .prefix {
-  color: rgb(250, 250, 250);
-}
-
-.prefix {
-  color: rgba(255, 255, 255, 0.5);
-  margin-bottom: 1%;
-}
-
-h1.prefix {
-  font-size: clamp(28px, 5vw, 2em);
-}
-
-h2.prefix {
-  font-size: clamp(24px, 5vw, 1.5em);
-}
-
-.questionTime {
-  color: white;
-  font-weight: bold;
-  font-size: clamp(20px, 5vw, 1em);
-}
-
-a {
-  color: white;
-  text-decoration: none;
-}
-
-.questionSlider {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
-  width: 100%;
-  height: 50%;
-}
-
-.seedButton {
-  color: #00aa00;
-  cursor: pointer;
-  font-family: 'Roboto';
-  background: none;
-  font-size: inherit;
-  border: none;
+    background-image: url('/images/4k.jpg');
+    background-size: cover;
+    background-blend-mode: darken;
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-family: 'Roboto';
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-size: 1.4vw;
+    background-repeat: no-repeat;
 }
 
 .header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  gap: 2%;
-  width: 100%;
-  flex-flow: wrap;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 1.5vw;
+    width: 100%;
+    margin-bottom: 2vh;
+}
+
+.seed {
+    align-self: flex-start;
+    align-items: flex-start;
+    justify-content: flex-start;
+    width: 18vw;
+    margin: 0;
+}
+
+.header > .prefix {
+    color: rgb(250, 250, 250);
+    margin-bottom: 1%;
+    max-width: 100%;
+    text-align: center;
+    margin-bottom: 1vh;
+    max-width: 100%;
+    font-size: clamp(18px, 20vmin, 1.5em);
+    width: 18vw;
+}
+
+.setSeed {
+    font-size: 0.5em;
+    margin-right: 0;
+    margin-bottom: 0;
+    margin-top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    height: 100%;
+}
+
+.actualSeed {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    justify-content: flex-end;
+    margin-top: 0.1em;
+}
+
+h2.prefix {
+    color: hsla(0, 0%, 90%, 0.9);
+    font-size: clamp(18px, 20vmin, 1.5em);
+    margin: 0;
+    margin-bottom: 1%;
+    max-width: 100%;
+    text-align: center;
+}
+
+.questionString,
+.answer,
+.questionTime {
+    color: white;
+    font-weight: bold;
+    font-size: clamp(0.75rem, -0.3214rem + 5.7143vw, 5.75rem);
+    -width: 100%;
+    display: inline-block;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+a {
+    color: white;
+    text-decoration: none;
+}
+
+.questionSlider {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    height: 50%;
+}
+
+.seedButton {
+    color: #00aa00;
+    cursor: pointer;
+    font-family: 'Roboto';
+    background: none;
+    font-size: inherit;
+    border: none;
 }
 
 .question::after {
-  opacity: 1;
+    opacity: 1;
 }
 
 .question {
-  background-color: var(--question-color);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  width: 50%;
-  height: 100%;
+    background-color: var(--question-color);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    width: 75%;
+    height: 100%;
+    max-width: 100%;
 }
 
 .question:hover::before {
-  opacity: 1;
+    opacity: 1;
 }
 
 .question::before,
 .question::after {
-  border-radius: inherit;
-  content: '';
-  height: 100%;
-  left: 0px;
-  opacity: 0;
-  position: absolute;
-  top: 0px;
-  transition: opacity 500ms;
-  width: 100%;
+    border-radius: inherit;
+    content: '';
+    height: 100%;
+    left: 0px;
+    opacity: 0;
+    position: absolute;
+    top: 0px;
+    transition: opacity 500ms;
+    width: 100%;
 }
 
 .question::before {
-  background: radial-gradient(
-    800px circle at var(--mouse-x) var(--mouse-y),
-    rgba(255, 255, 255, 0.06),
-    transparent 40%
-  );
-  z-index: 3;
+    background: radial-gradient(
+        800px circle at var(--mouse-x) var(--mouse-y),
+        rgba(255, 255, 255, 0.06),
+        transparent 40%
+    );
+    z-index: 3;
+}
+
+.question.randomSeed::before {
+    background: radial-gradient(
+        800px circle at var(--mouse-x) var(--mouse-y),
+        rgba(0, 255, 106, 0.06),
+        transparent 40%
+    );
+    z-index: 3;
 }
 
 .question::after {
-  background: radial-gradient(
-    600px circle at var(--mouse-x) var(--mouse-y),
-    rgba(255, 255, 255, 0.4),
-    transparent 40%
-  );
-  z-index: 1;
+    background: radial-gradient(
+        600px circle at var(--mouse-x) var(--mouse-y),
+        rgba(255, 255, 255, 0.4),
+        transparent 40%
+    );
+    z-index: 1;
+}
+
+.question.randomSeed::after {
+    background: radial-gradient(
+        600px circle at var(--mouse-x) var(--mouse-y),
+        rgba(255, 0, 157, 0.4),
+        transparent 40%
+    );
+    z-index: 1;
 }
 
 .question > .question-content {
-  background-color: var(--question-color);
-  border-radius: inherit;
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-  inset: 1px;
-  padding: 10px;
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+    background-color: var(--question-color);
+    border-radius: inherit;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    inset: 1px;
+    position: absolute;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2vh;
+    max-width: 100%;
 }
 
 .sliderButton {
-  background: none;
-  font-size: 7.7vw;
-  color: white;
-  cursor: pointer;
-  font-family: 'Roboto';
-  border: none;
-  -moz-user-select: -moz-none;
-  -khtml-user-select: none;
-  -webkit-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+    background: none;
+    font-size: 7.7vw;
+    color: white;
+    cursor: pointer;
+    font-family: 'Roboto';
+    border: none;
+    -moz-user-select: -moz-none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .sliderButton:disabled {
-  color: rgb(31, 31, 31);
-  cursor: not-allowed;
-  border: none;
+    color: rgb(31, 31, 31);
+    cursor: not-allowed;
+    border: none;
 }
 
-/* .sliderButton::before {
-  /* color: radial-gradient(
-    600px circle at var(--mouse-x) var(--mouse-y),
-    rgba(255, 255, 255, 0.4),
-    transparent 40%
-  ); */
-/* rotate: calc(180deg + var(--mouse-x)); */
-/* } */
-
-/* .sliderButton::after { */
-/* color: radial-gradient(
-    600px circle at var(--mouse-x) var(--mouse-y),
-    rgba(255, 255, 255, 0.4),
-    transparent 40%
-  ); */
-/* color: rgb(0, 0, calc(--mouse-x)); */
-/* rotate: calc(180deg + var(--mouse-x)); */
-/* } */
-
 p {
-  text-align: center;
+    text-align: center;
 }
 
 .homeContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  max-width: 80%;
-  width: 100%;
-  height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 80%;
+    width: 100%;
+    height: 100%;
 }
 
 .projectAnchor {
-  border-bottom: 3px solid rgb(45, 57, 178);
-  font-size: clamp(32px, 5vw, 50px);
-  margin-bottom: 2%;
-  cursor: pointer;
-  color: rgb(255, 248, 220);
-  text-align: center;
-  max-width: 40%;
-  font-weight: bold;
-  transition: all 0.25s linear;
-  position: relative;
+    border-bottom: 3px solid rgb(45, 57, 178);
+    font-size: 8vmin;
+    cursor: pointer;
+    color: rgb(255, 248, 220);
+    text-align: center;
+    max-width: 40%;
+    font-weight: bold;
+    transition: all 0.25s linear;
+    position: relative;
+    margin: 0;
+    margin-bottom: 5vh;
 }
 
 .projectAnchor:before {
-  content: '';
-  display: block;
-  width: 100%;
-  height: 3px;
-  background-color: rgb(130, 0, 255);
-  position: absolute;
-  left: 0;
-  bottom: -3px; /* this is to match where the border is */
-  transform-origin: left;
-  transform: scale(0);
-  transition: 0.25s linear;
-  /*   will-change: transform; */
+    content: '';
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: rgb(130, 0, 255);
+    position: absolute;
+    left: 0;
+    bottom: -3px; /* this is to match where the border is */
+    transform-origin: left;
+    transform: scale(0);
+    transition: 0.25s linear;
+    /*   will-change: transform; */
 }
 
 .projectAnchor:hover:before {
-  transform: scale(1);
+    transform: scale(1);
 }
 
 .madeBy {
-  color: rgba(255, 255, 255, 0.5);
-  font-size: 2rem;
-  text-align: center;
-  position: absolute;
-  top: 1rem;
-  bottom: 0;
-  left: 1rem;
-  margin: 0;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 2rem;
+    text-align: center;
+    position: absolute;
+    max-width: 40vw;
+    font-size: clamp(1rem, 0.6479rem + 1.1268vw, 2rem);
+    top: 1rem;
+    bottom: 0;
+    left: 1rem;
+    margin: 0;
+    height: fit-content;
 }
 
 .timestamp {
-  color: white;
-  font-size: clamp(18px, 1.2vw, 16px);
-  text-align: center;
-  margin: 20px 0;
-  font-weight: normal;
+    color: white;
+    font-size: clamp(18px, 1.2vw, 16px);
+    text-align: center;
+    margin: 20px 0;
+    font-weight: normal;
 }
 
 .date-display {
-  color: white;
-  font-weight: bold;
-  background: rgba(76, 175, 80, 0.1);
-  padding: 12px 20px;
-  border-radius: 20px;
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  display: inline-block;
-  margin: 30px 0;
-  font-size: clamp(18px, 1.3vw, 16px);
-  position: relative;
-  cursor: default;
+    color: white;
+    font-weight: bold;
+    background: rgba(76, 175, 80, 0.1);
+    padding: 12px 20px;
+    border-radius: 20px;
+    border: 1px solid rgba(76, 175, 80, 0.3);
+    display: inline-block;
+    margin: 30px 0;
+    font-size: clamp(18px, 1.3vw, 16px);
+    position: relative;
+    cursor: default;
 }
 
 .date-display[title]:not([title='']):hover {
-  cursor: help;
+    cursor: help;
 }
 
 .date-display:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.9);
-  color: white;
-  padding: 8px 12px;
-  border-radius: 8px;
-  font-size: 14px;
-  white-space: nowrap;
-  z-index: 1000;
-  margin-bottom: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .date-display:hover::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.9);
-  margin-bottom: 2px;
-  z-index: 1000;
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    margin-bottom: 2px;
+    z-index: 1000;
 }
 
 .back {
-  padding: 1rem 2.5rem;
-  font-weight: bold;
-  font-size: 1.5rem;
-  border-radius: 10px;
-  border: none;
-  background: #422e44;
-  color: #fff;
-  cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: background 0.2s;
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1001;
+    padding: 1rem 2.5em;
+    font-weight: bold;
+    font-size: clamp(1rem, 0.6479rem + 1.1268vw, 2rem);
+    border-radius: 10px;
+    border: none;
+    background: #422e44;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: background 0.2s;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 1001;
 }
 .back:hover {
-  background: #231a27;
+    background: #231a27;
 }
