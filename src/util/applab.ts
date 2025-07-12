@@ -1,4 +1,4 @@
-// VERSION 1.0
+// VERSION 1.0.1
 let questions: string[] = [];
 let answers: (number | string)[] = [];
 // var currentQuestion = 0;
@@ -11,8 +11,8 @@ let shouldChangeFontSize: { buttonFontSize?: number; fontSize?: number }[] = [];
 // var setSeed = false;
 let seed: string | undefined = undefined;
 let random: (() => number) | undefined = undefined;
-let finalTime: number | null = null;
-let eachQuestionTime: number[] = [];
+// // let finalTime: number | null = null;
+// let eachQuestionTime: number[] = [];
 
 function imul(a: number, b: number) {
     let ah = (a >>> 16) & 0xffff;
@@ -275,7 +275,7 @@ function formatIntervals(...intervals: (string | intervalI)[]) {
     return results.join(' ∪ ');
 }
 
-function shuffle(array: any[]) {
+function shuffle<T>(array: T[]) {
     let currentIndex = array.length,
         randomIndex;
 
@@ -423,13 +423,13 @@ function handleFakeUnionAlternative(
 ) {
     const result = [];
     for (let i = 0; i < fakeUnionAlternativesRaw[x].length; i++) {
-        const randomAlternative = fakeUnionAlternativesRaw[x][i];
-        result.push({
-            ...randomAlternative,
-            openingClosed: randomAlternative.openingClosed! ^ (i + (x % 2)) % 2,
-            endingClosed:
-                randomAlternative.endingClosed! ^ (i + (x >= 2 ? 1 : 0)) % 2
-        });
+        const clonedRandomAlternativeRaw = clone(
+            fakeUnionAlternativesRaw[x][i]
+        );
+        clonedRandomAlternativeRaw.openingClosed! ^= (i + (x % 2)) % 2;
+        clonedRandomAlternativeRaw.endingClosed! ^= (i + (x >= 2 ? 1 : 0)) % 2;
+
+        result.push(clonedRandomAlternativeRaw);
     }
     return result;
 }
@@ -457,21 +457,14 @@ function handleUnionWithEmptyIntersection(
     );
 
     for (let i = 0; i < 3; i++) {
+        let clonedAlernativesRaw = clone(shuffledAlternativesRaw[i]);
+        clonedAlernativesRaw.openingClosed! += (i % 2 === 0 ? 1 : 0) % 2;
+        clonedAlernativesRaw.endingClosed! += (i > 1 ? 1 : 0) % 2;
+
         shuffledAlternativesRaw.splice(
             i,
             1,
-            turnClosings(
-                {
-                    ...shuffledAlternativesRaw[i],
-                    openingClosed:
-                        shuffledAlternativesRaw[i].openingClosed +
-                        ((i % 2 === 0 ? 1 : 0) % 2),
-                    endingClosed:
-                        shuffledAlternativesRaw[i].endingClosed +
-                        ((i > 1 ? 1 : 0) % 2)
-                },
-                i
-            )
+            turnClosings(clonedAlernativesRaw, i)
         );
     }
 
